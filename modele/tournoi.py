@@ -28,6 +28,7 @@ class Tournoi:
         list_matchs = []
         # Create and sort a list of player+score who don't have a match for the turn
         unmatch_player_score = self.list_player_score
+        # check if it is the first turn or sort list_player_score by the score
         if self.current_turn == 0:
             random.shuffle(unmatch_player_score)
         else:
@@ -35,9 +36,31 @@ class Tournoi:
         # Match player for a match
         for player_score in unmatch_player_score:
             unmatch_player_score.remove(player_score)
-            matched_player_score = (player_score, unmatch_player_score[0])
-            new_match = match.Match(matched_player_score)
-            list_matchs.append(new_match)
+            all_match_done = True
+            # Looking for other player to match
+            for player_to_match in unmatch_player_score:
+                matched_player_score = (player_score, player_to_match)
+                new_match = match.Match(matched_player_score)
+                # Verify if a match exists in previous turn
+                match_already_done = False
+                for turn in self.list_turns:
+                    if turn.matchdone(new_match):
+                        match_already_done = True
+                        break
+                if match_already_done:
+                    del new_match
+                else:
+                    list_matchs.append(new_match)
+                    unmatch_player_score.remove(player_to_match)
+                    break
+            # IF all match already done once , randomize a match
+            if all_match_done:
+                random_player = random.choice(unmatch_player_score)
+                matched_player_score = (player_score, random_player)
+                new_match = match.Match(matched_player_score)
+                list_matchs.append(new_match)
+                unmatch_player_score.remove(random_player)
+
         # Create a new Tour instance
         turn_name = "Round" + str(self.current_turn)
         new_turn = tour.Tour(turn_name, start_time, end_time, list_matchs)
@@ -45,13 +68,18 @@ class Tournoi:
 
     """Advance a new turn to the tournament"""
     def advanceturn(self, start_time, end_time):
+        # finish precedent turn and create a new one or end the tournament if already last turn
         if self.current_turn != self.turn_number:
             self.current_turn += 1
             self.createturns(start_time, end_time)
+            return True
         else:
-            self.endtournament()
+            return False
 
     """End the tournament"""
     def endtournament(self):
-        print(f"Tournoi fini")
-        return self.list_player_score
+        # End the tournament if all turn are over
+        for turn in self.list_turns:
+            if turn.is_over:
+                return False
+        return True

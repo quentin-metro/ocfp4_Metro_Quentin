@@ -1,5 +1,5 @@
 import json
-from modele.joueur import Joueur
+from models.joueur import Joueur
 
 
 class PlayerManager:
@@ -19,22 +19,22 @@ class PlayerManager:
             pass
 
     def addplayer(self, player):
-        new_player = Joueur(player['INE'],
-                            player.get('lastname'),
-                            player.get('name'),
-                            player.get('birthdate'),
-                            )
+        new_player = Joueur(player['INE'], player['lastname'], player['name'], player['birthdate'])
         self.list_player.append(new_player)
         return True
 
     def exist(self, player_ine: str):
         for player in self.list_player:
-            if player_ine == player['INE']:
+            if player_ine == player.ine:
                 return True
         return False
 
     def tojson(self):
-        # Write the player in json
-        with open('./data/player.json', 'w', encoding='utf-8') as player_file:
-            json.dump(self.list_player, player_file, indent=4)
-            player_file.close()
+        if self.list_player:
+            # Write the player in json
+            with open('./data/player.json', 'w', encoding='utf-8') as player_file:
+                list_to_write = []
+                for player in self.list_player:
+                    list_to_write.append(player.todict())
+                json.dump(list_to_write, player_file, indent=4)
+                player_file.close()

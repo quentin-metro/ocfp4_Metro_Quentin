@@ -1,2 +1,2 @@
 # ocfp4_Metro_Quentin
-OpenClassroom , formation pyhton , projet4 - Développez un programme logiciel en Python
+OpenClassroom , formation python , projet4 - Développez un programme logiciel en Python

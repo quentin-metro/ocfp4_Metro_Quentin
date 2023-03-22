@@ -1,6 +1,6 @@
 import random
-from modele.match import Match
-# from modele.tour import Tour
+from models.match import Match
+# from models.tour import Tour
 
 
 def matchmaking(unmatch_player_score, list_turns):

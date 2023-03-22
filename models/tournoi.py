@@ -1,14 +1,15 @@
 import random
 from .tour import Tour
-from controler.matchmaking import matchmaking
+from controllers.matchmaking import matchmaking
 
 
 class Tournoi:
     """a Tournament"""
     total_id_tournament = 0
 
-    def __init__(self, name: str, place: str, start_date: str, end_date: str, list_players, desc_tournament, list_turn,
-                 turn_number=4, current_turn=0, list_player_score=None, id_tournament: int = None):
+    def __init__(self, name: str, place: str, start_date: str, end_date: str, desc_tournament: str,
+                 id_tournament: int = None, turn_number: int = 4, current_turn: int = 0, list_turn=None,
+                 list_players=None, list_player_score=None):
         self.id_tournament = 0
         self.editidtournament(id_tournament)
         self.name = name
@@ -75,17 +76,17 @@ class Tournoi:
                 return False
         return True
 
-    def todir(self):
-        my_dir = {'id_tournament': self.id_tournament,
-                  'name': self.name,
-                  'place': self.place,
-                  'start date': self.start_date,
-                  'end date': self.end_date,
-                  'turn number': self.turn_number,
-                  'desc': self.desc_tournament,
-                  'list player': self.list_player,
-                  'list player score': self.list_player_score,
-                  'list turns': self.list_turns,
-                  'current turn': self.current_turn
-                  }
-        return my_dir
+    def todict(self):
+        my_dict = {'id_tournament': self.id_tournament,
+                   'name': self.name,
+                   'place': self.place,
+                   'start date': self.start_date,
+                   'end date': self.end_date,
+                   'turn number': self.turn_number,
+                   'desc': self.desc_tournament,
+                   'list player': self.list_player,
+                   'list player score': self.list_player_score,
+                   'list turns': self.list_turns,
+                   'current turn': self.current_turn
+                   }
+        return my_dict

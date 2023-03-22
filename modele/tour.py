@@ -1,6 +1,10 @@
 class Tour:
     """a Turn"""
-    def __init__(self, name, start_time, end_time, list_matchs):
+    total_id_turn = 0
+
+    def __init__(self, name: str, start_time: str, end_time: str, list_matchs, id_turn: int = None):
+        self.id_turn = 0
+        self.editidturn(id_turn)
         self.name = name
         self.start_time = start_time
         self.end_time = end_time
@@ -26,3 +30,13 @@ class Tour:
             if match_already_done.samematch(new_match):
                 return True
         return False
+
+    def editidturn(self, id_turn=None):
+        if id_turn is None:
+            self.total_id_turn += 1
+            self.id_turn = self.total_id_turn
+        else:
+            self.id_turn = id_turn
+            if id_turn > self.total_id_turn:
+                self.total_id_turn = id_turn
+        return True

@@ -1,40 +1,36 @@
-import json
 from models.joueur import Joueur
+from controllers.manager import Manager
 
 
-class PlayerManager:
-    list_player = []
+class PlayerManager(Manager):
     """Control the Players"""
+
     def __init__(self):
         self.list_player = []
+        self.list_missing = []
         # initialize the player list
-        try:
-            with open('./data/player.json', 'r') as player_file:
-                player_json = json.load(player_file)
-                for player in player_json:
-                    self.addplayer(player)
-                player_file.close()
-
-        except FileNotFoundError:
-            pass
+        new_list_player = self.db.search(self.query.ine.exists())
+        if new_list_player:
+            for player in new_list_player:
+                self.addplayer(player)
 
     def addplayer(self, player):
         new_player = Joueur(player['INE'], player['lastname'], player['name'], player['birthdate'])
         self.list_player.append(new_player)
+        for player_ine in self.list_missing:
+            if player_ine == player['INE']:
+                self.list_missing.remove(player_ine)
         return True
 
     def exist(self, player_ine: str):
-        for player in self.list_player:
-            if player_ine == player.ine:
+        for know_player in self.list_player:
+            if player_ine == know_player.ine:
                 return True
         return False
 
-    def tojson(self):
-        if self.list_player:
-            # Write the player in json
-            with open('./data/player.json', 'w', encoding='utf-8') as player_file:
-                list_to_write = []
-                for player in self.list_player:
-                    list_to_write.append(player.todict())
-                json.dump(list_to_write, player_file, indent=4)
-                player_file.close()
+    def missingplayer(self, list_player):
+        for player_ine in list_player:
+            if player_ine:
+                if not self.exist(player_ine):
+                    self.list_missing.append(player_ine)
+        return self.list_missing

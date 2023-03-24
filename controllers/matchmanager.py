@@ -18,6 +18,9 @@ class MatchManager(Manager):
                 if match_id > self.total_id_match:
                     self.total_id_match = match_id
 
+    def getmatchinfo(self, id_match):
+        return self.db.search(self.query.id_match == id_match)
+
     def creatematch(self, match):
         new_match_id = int(float(match['id_match']))
         if not new_match_id:
@@ -90,3 +93,18 @@ class MatchManager(Manager):
             if match_already_done.samematch(new_matched_player_score):
                 return True
         return False
+
+    @staticmethod
+    def readablescore(score):
+        # score = [(player1,score1),(player2,score2)]
+        return f'{score[0][0]} {score[0][1]} : {score[1][1]} {score[1][0]}'
+
+    @staticmethod
+    def getwinner(start_score, end_score):
+        if end_score[0][1] == start_score[0][1] + 0.5:
+            return "Match nul"
+        elif end_score[0][1] != start_score[0][1]:
+            return end_score[0][0]
+        else:
+            return end_score[1][0]
+

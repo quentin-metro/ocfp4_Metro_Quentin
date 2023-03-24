@@ -14,9 +14,13 @@ class PlayerManager(Manager):
             for player in new_list_player:
                 self.addplayer(player)
 
+    def getplayerinfo(self, player_ine):
+        return self.db.search(self.query.ine == player_ine)
+
     def addplayer(self, player):
         new_player = Joueur(player['INE'], player['lastname'], player['name'], player['birthdate'])
         self.list_player.append(new_player)
+        self.db.insert(new_player.todict())
         for player_ine in self.list_missing:
             if player_ine == player['INE']:
                 self.list_missing.remove(player_ine)

@@ -27,6 +27,9 @@ class Tournoi:
     def getidtournament(self):
         return self.id_tournament
 
+    def getlistplayer(self):
+        return self.list_player
+
     def editlistplayer(self, list_players: list):
         self.list_player = list_players
         return self.list_player

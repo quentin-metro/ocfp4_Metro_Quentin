@@ -12,6 +12,9 @@ class TurnManager(Manager):
             for turn in new_list_turn:
                 self.createturn(turn)
 
+    def getinfoturn(self, id_turn):
+        return self.db.search(self.query.id_turn == id_turn)
+
     def createturn(self, turn):
         new_turn_id = int(float(turn['id_turn']))
         new_tour = Tour(turn['name'],
@@ -43,7 +46,6 @@ class TurnManager(Manager):
         for turn in turn_list:
             if not turn['end_time']:
                 turn.endturn(turn['id_turn'], end_time)
-
 
     @staticmethod
     def getlistmatchs(list_turn):

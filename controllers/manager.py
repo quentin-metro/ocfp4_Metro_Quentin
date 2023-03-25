@@ -2,5 +2,5 @@ from tinydb import TinyDB, Query
 
 
 class Manager:
-    db = TinyDB('./data/data.json')
+    db = TinyDB('./data/tournaments/data.json')
     query = Query()

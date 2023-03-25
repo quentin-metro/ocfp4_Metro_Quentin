@@ -14,6 +14,9 @@ class PlayerManager(Manager):
             for player in new_list_player:
                 self.addplayer(player)
 
+    def getplayerlist(self):
+        return self.list_player
+
     def getplayerinfo(self, player_ine):
         return self.db.search(self.query.ine == player_ine)
 

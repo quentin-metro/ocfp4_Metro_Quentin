@@ -102,9 +102,8 @@ class MatchManager(Manager):
     @staticmethod
     def getwinner(start_score, end_score):
         if end_score[0][1] == start_score[0][1] + 0.5:
-            return "Match nul"
+            return "Draw"
         elif end_score[0][1] != start_score[0][1]:
             return end_score[0][0]
         else:
             return end_score[1][0]
-

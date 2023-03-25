@@ -16,13 +16,7 @@ class Tournoi:
         self.list_turns = list_turn
         self.current_turn = current_turn
         self.state_tournament = state_tournament
-        if list_player_score is None:
-            self.list_player_score = []
-            for player in list_players:
-                # connect a player and a score in the tournament
-                self.list_player_score.append([player, 0])
-        else:
-            self.list_player_score = list_player_score
+        self.list_player_score = list_player_score
 
     def getidtournament(self):
         return self.id_tournament
@@ -39,6 +33,12 @@ class Tournoi:
 
     def editlistturn(self, new_list_turn: list):
         self.list_turns = new_list_turn
+
+    def getlistplayerscore(self):
+        return self.list_player_score
+
+    def editlistplayerscore(self, new_list_player_score: list):
+        self.list_player_score = new_list_player_score
 
     def addturn(self, new_turn: list):
         self.list_turns.append(new_turn)

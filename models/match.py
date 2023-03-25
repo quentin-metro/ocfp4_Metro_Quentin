@@ -3,7 +3,7 @@ class Match:
     total_id_match = 0
 
     # player_score, winner_score == (player, score)
-    # matched_player_score == ([player1, score1],[player2, score2])
+    # matched_player_score == ([player_ine1, score1],[player_ine2, score2])
     def __init__(self, matched_player_score, id_match: int, end_score=None):
         self.id_match = id_match
         self.matched_player_score = matched_player_score

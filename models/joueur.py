@@ -7,7 +7,7 @@ class Joueur:
         self.ine = ine
 
     def todict(self):
-        my_dict = {'INE': self.ine,
+        my_dict = {'ine': self.ine,
                    'lastname': self.lastname,
                    'name': self.name,
                    'birthdate': self.birthdate,

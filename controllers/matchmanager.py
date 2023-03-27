@@ -1,6 +1,7 @@
 import random
 from models.match import Match
 from controllers.manager import Manager
+from controllers.myappexception import MyAppDontPlayThisMatch
 
 
 class MatchManager(Manager):
@@ -63,10 +64,12 @@ class MatchManager(Manager):
 
     def win(self, match, winner):
         start_score = match.getmatchedplayerscore()
-        if winner == start_score[0]:
+        if winner == start_score[0][0]:
             start_score[0][1] += 1
-        else:
+        elif winner == start_score[1][0]:
             start_score[1][1] += 1
+        else:
+            raise MyAppDontPlayThisMatch
         game_over = match.endmatch(start_score)
         self.db.update(match.todict(), self.query.id_match == match.getidmatch())
         return game_over

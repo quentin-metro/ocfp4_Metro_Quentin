@@ -24,5 +24,7 @@ class MenuManager:
             elif uncased_command == "joueur":
                 self.playerview.askcommandplayer()
             elif uncased_command == "exit":
+                self.menuview.goodbye()
                 break
-        self.menuview.goodbye()
+            else:
+                print(f'Commande non comprise\n\n')

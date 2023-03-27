@@ -1,4 +1,5 @@
 from controllers.playermanager import PlayerManager
+from controllers.myappexception import MyAppBadPlayerINE
 
 
 class PlayerView:
@@ -7,7 +8,8 @@ class PlayerView:
 
     def askcommandplayer(self):
         while True:
-            print(f'Quel action souhaitez vous effectuer?\n'
+            print(f'\n'
+                  f'Quel action souhaitez vous effectuer?\n'
                   f'Voir la liste des joueurs | Liste\n'
                   f'Ajouter un joueur | Ajouter\n'
                   f'Retour Menu | Menu')
@@ -22,22 +24,41 @@ class PlayerView:
                 print(f'Commande non comprise\n\n')
 
     def viewplayerlist(self):
-        playerlist = self.playermanager.getplayerlist()
-        print(f'   INE   |  Nom Prenom | Date de Naissance')
-        for player in playerlist:
-            print(f'{player[0]} | {player[1]} {player[2]} | {player[4]}')
+        playerlist = self.playermanager.getplayerlistindict()
+        if playerlist:
+            print(f'\n'
+                  f'   INE  | Date de Naissance | Nom Prenom')
+            for player in playerlist:
+                ine = player['ine']
+                lastname = player['lastname']
+                name = player['name']
+                birthdate = player['birthdate']
+                print(f'{ine} |     {birthdate}      | {lastname} {name}')
+        else:
+            print(f'\n Aucun joueur connu\n')
 
     def addplayer(self):
-        player_ine = input('INE:')
-        # Check if player_ine exist already in data and display the info
-        player = self.playermanager.getplayerinfo(player_ine)
-        if player:
-            print(f'{player_ine} existe déjà\n'
-                  f'{player[0]} | {player[1]} {player[2]} | {player[4]}')
-            return
-        lastname = input('Nom: ')
-        name = input('Prenom: ')
-        birthdate = input('Date de naissance \'AAAA-MM-JJ\': ')
-        new_player = {"INE": player_ine, "lastname": lastname, "name": name, "birthdate": birthdate}
-        self.playermanager.addplayer(new_player)
-        print(f'Joueur créé')
+        player_ine = input('INE: ')
+        # Check if player_ine is in the correct format AB12345
+        try:
+            self.playermanager.ineformat(player_ine)
+        except MyAppBadPlayerINE as e:
+            print(e)
+        else:
+            # Check if player_ine exist already in data and display the info
+            player_ine = player_ine.upper()
+            player = self.playermanager.getplayerinfo(player_ine)
+            if player:
+                ine = player['ine']
+                lastname = player['lastname']
+                name = player['name']
+                birthdate = player['birthdate']
+                print(f'{player_ine} existe déjà\n'
+                      f'{ine} |     {birthdate}      | {lastname} {name}')
+                return
+            lastname = input('Nom: ')
+            name = input('Prenom: ')
+            birthdate = input('Date de naissance \'AAAA-MM-JJ\': ')
+            new_player = {"ine": player_ine, "lastname": lastname, "name": name, "birthdate": birthdate}
+            self.playermanager.addplayer(new_player)
+            print(f'Joueur créé')

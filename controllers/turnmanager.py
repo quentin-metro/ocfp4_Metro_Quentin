@@ -13,7 +13,7 @@ class TurnManager(Manager):
                 self.createturn(turn)
 
     def getinfoturn(self, id_turn):
-        return self.db.search(self.query.id_turn == id_turn)
+        return self.db.search(self.query.id_turn == int(id_turn))[0]
 
     def createturn(self, turn):
         new_turn_id = int(float(turn['id_turn']))

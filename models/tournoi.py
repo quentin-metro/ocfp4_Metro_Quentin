@@ -72,14 +72,14 @@ class Tournoi:
         my_dict = {'id_tournament': self.id_tournament,
                    'name': self.name,
                    'place': self.place,
-                   'start date': self.start_date,
-                   'end date': self.end_date,
-                   'turn number': self.turn_number,
+                   'start_date': self.start_date,
+                   'end_date': self.end_date,
+                   'turn_number': self.turn_number,
                    'desc': self.desc_tournament,
-                   'list player': self.list_player,
-                   'list player score': self.list_player_score,
-                   'list turns': self.list_turns,
-                   'current turn': self.current_turn,
+                   'list_player': self.list_player,
+                   'list_player_score': self.list_player_score,
+                   'list_turns': self.list_turns,
+                   'current_turn': self.current_turn,
                    'state_tournament': self.state_tournament
                    }
         return my_dict

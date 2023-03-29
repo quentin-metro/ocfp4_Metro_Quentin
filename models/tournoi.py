@@ -28,6 +28,8 @@ class Tournoi:
         self.list_player = list_players
         return self.list_player
 
+    def editenddate(self, time):
+        self.end_date = time
     def getlistturns(self):
         return self.list_turns
 
@@ -54,7 +56,7 @@ class Tournoi:
         # finish precedent turn and create a new one or end the tournament if already last turn
         if self.current_turn != self.turn_number:
             self.current_turn += 1
-            return True
+            return self.current_turn
         else:
             self.state_tournament = True
             return False

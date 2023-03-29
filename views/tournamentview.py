@@ -22,7 +22,10 @@ class TournamentView:
             if choice == "liste":
                 self.viewlisttournament()
             elif first_word and first_word[0] == "tournoi" and len(first_word) == 2:
-                self.viewtournament(first_word[1])
+                try:
+                    self.viewtournament(int(float(first_word[1])))
+                except ValueError:
+                    print(f' \'{first_word[0]}\' n\'est pas un nombre')
             elif first_word and first_word[0] == "nouveau":
                 self.viewnewtournament()
             elif choice == "menu":
@@ -62,7 +65,7 @@ class TournamentView:
                   f'Nom: {name}\n'
                   f'Place: {place}\n'
                   f'Debut: {start}')
-            if end != "":
+            if end != '':
                 print(f'Fin: {end}')
             print(f'Nombre de tours: {turnmax}\n'
                   f'Tour en cours: {turncurrent}\n'
@@ -70,12 +73,17 @@ class TournamentView:
             print(f'Quel action souhaitez vous effectuer?\n'
                   f'Voir la liste des joueurs inscrits | Joueurs\n'
                   f'Voir liste des tours et des matchs | tour-match')
-            if end == "":
+            if end == '':
                 # Check if all matchs of the current turn are done
-                allmatchdone = self.tournamentmanager.allmatchdone
+                allmatchdone = self.tournamentmanager.allmatchdone(tournoi_id)
                 islastturn = self.tournamentmanager.islastturn(tournoi_id)
-                if not allmatchdone or not islastturn:
-                    print(f'Continuer le tournoi | Continue')
+                if allmatchdone:
+                    if not islastturn:
+                        print(f'Continuer le tournoi | Continue')
+                    else:
+                        print(f'Clore le tournoi | Continue')
+                else:
+                    print(f'Certains matchs sont toujours en cours !!')
             print(f'Retour à la liste des tournois | Retour')
             choice = input().casefold()
             if choice == "joueurs":
@@ -83,9 +91,12 @@ class TournamentView:
             elif choice == "tour-match":
                 self.viewturnmatch(tournoi_id)
             elif choice == "continue":
-                if end == "":
+                if end == '':
                     try:
-                        self.tournamentmanager.advanceturn(tournoi_id)
+                        if self.tournamentmanager.advanceturn(tournoi_id):
+                            print(f'Tournoi avancé !')
+                        else:
+                            print(f'Impossible de continuer le tournoi , vérifier que les matchs sont finis')
                     except MyAppBadPlayerCount:
                         print(f'Impossible de continuer le tournoi, si le nombre de joueur est impaire ou 0')
                 else:
@@ -100,10 +111,18 @@ class TournamentView:
             list_player_name = self.tournamentmanager.getlistplayer(tournoi_id)
             if list_player_name:
                 print(f'\n'
-                      f'   INE   | Nom')
+                      f'   INE   | Nom     | Score tour fini ')
                 list_player_name.sort(key=lambda a: a[1])
+                list_score = self.tournamentmanager.getlistscore(tournoi_id)
                 for player in list_player_name:
-                    print(f'{player[0]}  {player[1]}')
+                    if list_score:
+                        for score in list_score:
+                            if score[0] == player[0]:
+                                print(f'{player[0]}  {player[1]} : {score[1]}')
+                                break
+                    else:
+                        print(f'{player[0]}  {player[1]}')
+
                 print(f'\n')
             else:
                 print(f'Aucun joueur inscrit\n')
@@ -133,39 +152,43 @@ class TournamentView:
                 all_done = True
                 for turn_id in list_turns:
                     turn = self.turnmanager.getinfoturn(turn_id)
-                    id_turn = turn['id_tournament']
+                    id_turn = turn['id_turn']
                     name = turn['name']
-                    start = turn['start_date']
-                    end = turn['end_date']
-                    print(f'Nom: {name}\n')
-                    print(f'\fID Tour: {id_turn}\n')
-                    print(f'\fDebut: {start}\n')
-                    if end != "":
-                        print(f'\fFin: {end}\n')
+                    start = turn['start_time']
+                    end = turn['end_time']
+                    print(f'\nNom: {name}\n'
+                          f'ID Tour: {id_turn}\n'
+                          f'Debut: {start}')
+                    if end is not None:
+                        print(f'Fin: {end}')
                     list_matchs = turn['list_matchs']
-                    print(f'\fListe des Matchs')
+                    print(f'Liste des Matchs')
                     for match_id in list_matchs:
                         match = self.matchmanager.getmatchinfo(match_id)
                         id_match = match['id_match']
                         matched_player_score = self.matchmanager.readablescore(match['matched_player_score'])
-                        end_score = self.matchmanager.readablescore(match['end_score'])
-                        print(f'\f\fID Match: {id_match}\n')
-                        print(f'\f\fScore Initial: {matched_player_score}\n')
-                        if end_score == "":
+                        print(f'ID Match: {id_match}\n'
+                              f'Score Initial: {matched_player_score}')
+                        if match['end_score'] is None:
                             all_done = False
                         else:
-                            print(f'\f\fScore Final: {end_score}\n')
-                            winner = self.matchmanager.getwinner(matched_player_score, end_score)
-                            print(f'\f\fVainqueur: {winner}')
+                            end_score = self.matchmanager.readablescore(match['end_score'])
+                            winner = self.matchmanager.getwinner(match['matched_player_score'], match['end_score'])
+                            print(f'Score Final: {end_score}\n'
+                                  f'Vainqueur: {winner}')
                 print(f'Quel action souhaitez vous effectuer?')
                 if not all_done:
                     print(f'Voir un match | Match match_id')
+            else:
+                print(f'\nLe tournoi n\'est pas commencé')
             print(f'Retour au tournoi | Retour')
             choice = input().casefold()
             first_word = choice.split()
             if first_word and first_word[0] == "match" and len(first_word) == 2:
-                self.viewmatch(first_word[1])
-                self.tournamentmanager.updatescore(tournoi_id, first_word[1])
+                try:
+                    self.viewmatch(int(float(first_word[1])))
+                except ValueError:
+                    print(f' \'{first_word[0]}\' n\'est pas un nombre')
             elif choice == "retour":
                 break
             else:
@@ -178,14 +201,14 @@ class TournamentView:
                 game_over = False
                 id_match = match['id_match']
                 matched_player_score = self.matchmanager.readablescore(match['matched_player_score'])
-                end_score = self.matchmanager.readablescore(match['end_score'])
-                print(f'\f\fID Match: {id_match}\n')
-                print(f'\f\fScore Initial: {matched_player_score}\n')
-                if end_score != "":
+                print(f'ID Match: {id_match}\n'
+                      f'Score Initial: {matched_player_score}')
+                if match['end_score'] is not None:
                     game_over = True
-                    print(f'\f\fScore Final: {end_score}\n')
-                    winner = self.matchmanager.getwinner(matched_player_score, end_score)
-                    print(f'\f\fVainqueur: {winner}')
+                    end_score = self.matchmanager.readablescore(match['end_score'])
+                    winner = self.matchmanager.getwinner(match['matched_player_score'], match['end_score'])
+                    print(f'Score Final: {end_score}\n'
+                          f'Vainqueur: {winner}')
 
                 print(f'Quel action souhaitez vous effectuer?')
                 if not game_over:
@@ -194,11 +217,11 @@ class TournamentView:
                 print(f'Retour au tournoi | Retour')
                 choice = input().casefold()
                 first_word = choice.split()
-                if first_word and first_word[0] == "Win" and len(first_word) == 2:
+                if first_word and first_word[0] == "win" and len(first_word) == 2:
                     try:
-                        self.matchmanager.win(match_id, first_word[1])
+                        self.matchmanager.win(match_id, first_word[1].upper())
                     except MyAppDontPlayThisMatch:
-                        print(f'{first_word[1]} ne joue pas dans ce match')
+                        print(f'{first_word[1].upper()} ne joue pas dans ce match')
                 elif choice == "draw":
                     self.matchmanager.draw(match_id)
                 elif choice == "retour":

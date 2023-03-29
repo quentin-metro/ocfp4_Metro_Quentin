@@ -9,6 +9,9 @@ class Tour:
         self.end_time = end_time
         self.list_matchs = list_matchs
 
+    def getturnid(self):
+        return self.id_turn
+
     def endturn(self, date: str):
         self.end_time = date
 

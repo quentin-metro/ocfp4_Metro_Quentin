@@ -14,28 +14,29 @@ class MatchManager(Manager):
         new_list_match = self.db.search(self.query.id_match.exists())
         if new_list_match:
             for match in new_list_match:
-                self.creatematch(match)
-                match_id = int(float(match['id_match']))
-                if match_id > self.total_id_match:
-                    self.total_id_match = match_id
+                id_match = int(float(match['id_match']))
+                new_match = Match(match['matched_player_score'],
+                                  id_match,
+                                  match['end_score']
+                                  )
+                self.list_matchs.append(new_match)
+                if id_match >= self.total_id_match:
+                    self.total_id_match = id_match
+
+    def getmatch(self, match_id):
+        for match in self.list_matchs:
+            if match.getidmatch() == match_id:
+                return match
 
     def getmatchinfo(self, id_match):
-        return self.db.search(self.query.id_match == id_match)
+        return self.db.search(self.query.id_match == int(id_match))[0]
 
-    def creatematch(self, match):
-        new_match_id = int(float(match['id_match']))
-        if not new_match_id:
-            new_match_id = self.total_id_match + 1
-        new_match = Match(match['matched_player_score'],
-                          new_match_id,
-                          match['end_score']
+    def creatematch(self, matched):
+        self.total_id_match += 1
+        new_match_id = self.total_id_match
+        new_match = Match(matched,
+                          new_match_id
                           )
-        self.list_matchs.append(new_match)
-        return new_match
-
-    def addmatch(self, match):
-        new_match = self.creatematch(match)
-        self.db.insert(new_match.todict())
         return new_match
 
     def matchmaking(self, unmatch_player_score, list_match_done):
@@ -44,58 +45,72 @@ class MatchManager(Manager):
         for player_score in unmatch_player_score:
             unmatch_player_score.remove(player_score)
             all_match_done = True
-            # Looking for other player to match
-            for player_to_match in unmatch_player_score:
-                matched_player_score = (player_score, player_to_match)
-                # Verify if a match exists in previous turn
-                if not self.matchdone(matched_player_score, list_match_done):
-                    new_matched = {"matched_player_score": matched_player_score}
-                    new_match = self.addmatch(new_matched)
-                    list_matchs.append(new_match)
-                    unmatch_player_score.remove(player_to_match)
-                    break
-            # IF all match already done once , randomize a match
+            if list_match_done:
+                # Looking for other player to match
+                for player_to_match in unmatch_player_score:
+                    matched_player_score = [(player_score[0], 0), (player_to_match[0], 0)]
+                    # Verify if a match exists in previous turn
+                    if not self.matchdone(matched_player_score, list_match_done):
+                        new_match = self.creatematch(matched_player_score)
+                        list_matchs.append(new_match)
+                        unmatch_player_score.remove(player_to_match)
+                        all_match_done = False
+                        self.list_matchs.append(new_match)
+                        self.db.insert(new_match.todict())
+                        break
+            # IF all match already done once or first turn, randomize a match
             if all_match_done:
                 random_player = random.choice(unmatch_player_score)
-                matched_player_score = (player_score, random_player)
-                new_match = self.addmatch(matched_player_score)
+                matched_player_score = [(player_score[0], 0), (random_player[0], 0)]
+                new_match = self.creatematch(matched_player_score)
                 list_matchs.append(new_match)
                 unmatch_player_score.remove(random_player)
+                self.list_matchs.append(new_match)
+                self.db.insert(new_match.todict())
+        return list_matchs
 
-    def win(self, match, winner):
+    def win(self, match_id, winner):
+        match = self.getmatch(match_id)
         start_score = match.getmatchedplayerscore()
         if winner == start_score[0][0]:
-            start_score[0][1] += 1
+            end_score = [(start_score[0][0], start_score[0][1] + 1), (start_score[1][0], start_score[1][1])]
         elif winner == start_score[1][0]:
-            start_score[1][1] += 1
+            end_score = [(start_score[0][0], start_score[0][1]), (start_score[1][0], start_score[1][1] + 1)]
         else:
             raise MyAppDontPlayThisMatch
-        game_over = match.endmatch(start_score)
+        game_over = match.endmatch(end_score)
         self.db.update(match.todict(), self.query.id_match == match.getidmatch())
         return game_over
 
-    def draw(self, match):
+    def draw(self, match_id):
+        match = self.getmatch(match_id)
         start_score = match.getmatchedplayerscore()
-        start_score[0][1] += 0.5
-        start_score[0][1] += 0.5
-        game_over = match.endmatch(start_score)
+        end_score = [(start_score[0][0], start_score[0][1] + 0.5), (start_score[1][0], start_score[1][1] + 0.5)]
+        game_over = match.endmatch(end_score)
         self.db.update(match.todict(), self.query.id_match == match.getidmatch())
         return game_over
 
-    @staticmethod
-    def gameover(list_matchs):
-        for match in list_matchs:
-            if not match.getendscore():
+    def matchdone(self, new_matched_player_score, list_match_done):
+        # check if a new match exist in this turn
+        for match_already_done in list_match_done:
+            match = self.getmatch(match_already_done)
+            if match.samematch(new_matched_player_score):
+                return True
+        return False
+
+    def gameover(self, list_matchs):
+        for match_id in list_matchs:
+            if type(match_id) == Match:
+                match = match_id
+            else:
+                match = self.getmatch(match_id)
+            if match.getendscore() is None:
                 return False
         return True
 
     @staticmethod
-    def matchdone(new_matched_player_score, list_match_done):
-        # check if a new match exist in this turn
-        for match_already_done in list_match_done:
-            if match_already_done.samematch(new_matched_player_score):
-                return True
-        return False
+    def getmatchid(match: Match):
+        return match.id_match
 
     @staticmethod
     def readablescore(score):

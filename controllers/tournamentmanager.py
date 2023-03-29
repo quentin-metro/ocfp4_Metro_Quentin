@@ -64,6 +64,11 @@ class TournamentManager(Manager):
             list_player_name.append((player_ine, lastname + ' ' + name))
         return list_player_name
 
+    def getlistscore(self, id_tournament: int):
+        """ Get the list of score in the tournament"""
+        tournoi = self.db.search(self.query.id_tournament == int(id_tournament))[0]
+        return tournoi['list_player_score']
+
     def getlistturn(self, id_tournament: int):
         """ Get list of turn from a tournament"""
         tournoi = self.db.search(self.query.id_tournament == int(id_tournament))[0]
@@ -75,7 +80,7 @@ class TournamentManager(Manager):
         self.total_id_tournament += 1
         tournoi['id_tournament'] = self.total_id_tournament
         tournoi['end_date'] = ""
-        tournoi['current_turn'] = 1
+        tournoi['current_turn'] = 0
         tournoi['state_tournament'] = "True"
         tournoi['list_turns'] = []
         tournoi['list_player'] = []
@@ -110,24 +115,82 @@ class TournamentManager(Manager):
             # Compare turn current and turn max
             current_turn = tournoi.getcurrentturnnumber()
             total_turn = tournoi.getturnnumber()
+            time = DateHandler.getdatehours()
             if current_turn < total_turn:
-                time = DateHandler.getdatehours()
                 # Create the first turn
-                if current_turn == 1:
+                if current_turn == 0:
                     number_of_player = len(tournoi.getlistplayer())
                     # Can't do a match if you don't have 2 player
                     if number_of_player % 2 != 0 or number_of_player == 0:
                         raise MyAppBadPlayerCount
                     else:
+                        # Create list_player_score
+                        list_player = tournoi.getlistplayer()
+                        player_score = []
+                        for player in list_player:
+                            player_score.append((player, 0))
+                        self.db.update({'list_player_score': player_score},
+                                       (self.query.id_tournament == int(id_tournament)))
+                        tournoi.editlistplayerscore(player_score)
+                        # Create new turn
                         self.createnewturns(id_tournament, time)
+                        current_turn = tournoi.advanceturn()
+                        list_turns = tournoi.getlistturns()
+                        list_turns_id = []
+                        for turn in list_turns:
+                            list_turns_id.append(turn)
+                        # Update data
+                        self.db.update({'list_turns': list_turns_id}, (self.query.id_tournament == int(id_tournament)))
+                        self.db.update({'current_turn': current_turn}, (self.query.id_tournament == int(id_tournament)))
                         return True
+                else:
+                    # Check if all match are done
+                    list_turns = tournoi.getlistturns()
+                    # current_turn - 1 == index du dernier tour
+                    list_matchs_id = self.turnmanager.getlistmatchs([list_turns[current_turn - 1]])
+                    list_matchs = []
+                    for match in list_matchs_id:
+                        list_matchs.append(self.matchmanager.getmatch(match))
+                    if self.matchmanager.gameover(list_matchs):
+                        for match in list_matchs_id:
+                            self.updatescore(id_tournament, match)
+                        # Create a new turn
+                        self.turnmanager.advanceturn(list_turns, time)
+                        self.createnewturns(id_tournament, time)
+                        current_turn = tournoi.advanceturn()
+                        list_turns_id = []
+                        for turn in list_turns:
+                            list_turns_id.append(turn)
+                        self.db.update({'list_turns': list_turns_id}, (self.query.id_tournament == int(id_tournament)))
+                        self.db.update({'current_turn': current_turn}, (self.query.id_tournament == int(id_tournament)))
+                        info_tournoi = self.db.search(self.query.id_tournament == int(id_tournament))[0]
+                        player_score = info_tournoi['list_player_score']
+                        self.db.update({'list_player_score': player_score},
+                                       (self.query.id_tournament == int(id_tournament)))
+                        return True
+            else:
+                # If last turn
+                info_tournoi = self.db.search(self.query.id_tournament == int(id_tournament))[0]
+                end_date = info_tournoi['end_date']
+                if end_date != "":
+                    return False
                 # Check if all match are done
-                list_turns = tournoi.list_turns()
-                list_matchs = self.turnmanager.getlistmatchs(list_turns)
+                list_turns = tournoi.getlistturns()
+                # current_turn - 1 == index du dernier tour
+                list_matchs_id = self.turnmanager.getlistmatchs([list_turns[current_turn - 1]])
+                list_matchs = []
+                for match in list_matchs_id:
+                    list_matchs.append(self.matchmanager.getmatch(match))
                 if self.matchmanager.gameover(list_matchs):
-                    # Create a new turn
+                    for match in list_matchs_id:
+                        self.updatescore(id_tournament, match)
                     self.turnmanager.advanceturn(list_turns, time)
-                    return True
+                    self.db.update({'end_date': time}, (self.query.id_tournament == int(id_tournament)))
+                    tournoi.editenddate(time)
+                    player_score = info_tournoi['list_player_score']
+                    self.db.update({'list_player_score': player_score},
+                                   (self.query.id_tournament == int(id_tournament)))
+                return True
         else:
             return False
 
@@ -137,26 +200,30 @@ class TournamentManager(Manager):
         tournoi = self.selecttournament(id_tournament)
         if tournoi:
             # Create and sort a list of player+score who don't have a match for the turn
-            unmatch_player_score = tournoi.list_player_score
+            info_tournoi = self.db.search(self.query.id_tournament == int(id_tournament))[0]
+            unmatch_player_score = info_tournoi['list_player_score']
             # check if it is the first turn
             if tournoi.current_turn == 0:
-                number_of_player = tournoi.getlistplayer().len()
+                number_of_player = len(tournoi.getlistplayer())
                 # Can't do a match if you don't have 2 player
                 if number_of_player % 2 != 0 and number_of_player != 0:
                     raise MyAppBadPlayerCount
                 # sort list_player_score by random
                 random.shuffle(unmatch_player_score)
+                match_already_done = []
             else:
                 # sort list_player_score by the score
                 unmatch_player_score.sort(key=lambda a: a[1])
-            match_already_done = self.turnmanager.getlistmatchs(tournoi.list_turns)
+                match_already_done = self.turnmanager.getlistmatchs(tournoi.list_turns)
             list_matchs = self.matchmanager.matchmaking(unmatch_player_score, match_already_done)
-
+            list_match_id = []
+            for match in list_matchs:
+                list_match_id.append(self.matchmanager.getmatchid(match))
             # Create a new Tour instance
             turn_number = tournoi.current_turn
-            turn_name = "Round" + str(turn_number)
-            new_turn = self.turnmanager.addturn(turn_name, start_time, list_matchs)
-            tournoi.list_turns.append(new_turn)
+            turn_name = "Round" + str(turn_number + 1)
+            new_turn = self.turnmanager.addturn(turn_name, start_time, list_match_id)
+            tournoi.list_turns.append(self.turnmanager.getturnid(new_turn))
 
     def addplayer(self, id_tournament: int, player_ine):
         """ Add a player to the tournament"""
@@ -182,11 +249,12 @@ class TournamentManager(Manager):
         new_score_list = update_tournoi['list_player_score']
         for player in end_score:
             for player_score in new_score_list:
-                if player == player_score[0]:
-                    player_score[1] = player[1]
+                if player[0] == player_score[0]:
+                    player_score[1] = player_score[1] + player[1]
                     break
-        self.db.update({'list_player_score': new_score_list}, (self.query.id_tournament == int(id_tournament))[0])
+        self.db.update({'list_player_score': new_score_list}, self.query.id_tournament == int(id_tournament))
         tournoi.editlistplayerscore(new_score_list)
+        return new_score_list
 
     def islastturn(self, id_tournament):
         tournoi = self.db.search(self.query.id_tournament == int(id_tournament))[0]

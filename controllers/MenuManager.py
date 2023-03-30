@@ -27,4 +27,4 @@ class MenuManager:
                 self.menuview.goodbye()
                 break
             else:
-                print(f'Commande non comprise\n\n')
+                print('Commande non comprise\n\n')

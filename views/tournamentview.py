@@ -236,19 +236,24 @@ class TournamentView:
     def viewnewtournament(self):
         while True:
             name = input('Nom: ')
-            place = input('Place: ')
-            start_date = input('Date de début \'AAAA-MM-JJ\': ')
-            desc = input('Description: ')
-            turn_max = input('Maximum Turn: ')
-            new_tournament = {"name": name,
-                              "place": place,
-                              "start_date": start_date,
-                              "desc": desc,
-                              "turn_number": turn_max,
-                              }
-            id_tournament = self.tournamentmanager.createtournament(new_tournament)
-            if id_tournament:
-                print(f'Le tournoi {name} a été créé avec l\'ID: {id_tournament}')
-                break
+            if self.tournamentmanager.tournamentexist(name):
+                place = input('Place: ')
+                start_date = input('Date de début \'AAAA-MM-JJ\': ')
+                desc = input('Description: ')
+                turn_max = input('Nombre de tour: ')
+                new_tournament = {"name": name,
+                                  "place": place,
+                                  "start_date": start_date,
+                                  "desc": desc,
+                                  "turn_number": turn_max,
+                                  }
+                id_tournament = self.tournamentmanager.addtournament(new_tournament)
+                if id_tournament:
+                    print(f'Le tournoi {name} a été créé avec l\'ID: {id_tournament}')
+                    break
+                else:
+                    print(f'Le tournoi n\'as pas été créé')
+                    break
             else:
-                print(f'Le tournoi n\'as pas été créé')
+                print(f'Un tournoi porte déjà ce nom')
+                break

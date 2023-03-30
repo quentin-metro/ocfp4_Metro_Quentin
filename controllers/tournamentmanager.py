@@ -21,6 +21,9 @@ class TournamentManager(Manager):
         if new_list_tournament:
             for tournoi in new_list_tournament:
                 self.createtournament(tournoi)
+                id_tournament = int(float(tournoi['id_tournament']))
+                if id_tournament >= self.total_id_tournament:
+                    self.total_id_match = id_tournament
 
     def getplayermanager(self):
         return self.playermanager
@@ -73,6 +76,13 @@ class TournamentManager(Manager):
         """ Get list of turn from a tournament"""
         tournoi = self.db.search(self.query.id_tournament == int(id_tournament))[0]
         return tournoi['list_turns']
+
+    def tournamentexist(self, name):
+        list_tournoi = self.db.search(self.query.id_tournament.exists())
+        for tournoi in list_tournoi:
+            if name.casefold() == tournoi['name'].casefold():
+                return False
+        return True
 
     def addtournament(self, tournoi):
         """ Create a new tournament"""

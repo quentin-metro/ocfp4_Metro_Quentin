@@ -1,4 +1,5 @@
 from controllers.playermanager import PlayerManager
+from controllers.datehandler import DateHandler
 from controllers.myappexception import MyAppBadPlayerINE
 
 
@@ -59,6 +60,11 @@ class PlayerView:
             lastname = input('Nom: ')
             name = input('Prenom: ')
             birthdate = input('Date de naissance \'AAAA-MM-JJ\': ')
-            new_player = {"ine": player_ine, "lastname": lastname, "name": name, "birthdate": birthdate}
-            self.playermanager.addplayer(new_player)
-            print(f'Joueur créé')
+            try:
+                DateHandler.validate(birthdate)
+            except ValueError:
+                print("Mauvais format de date! ")
+            else:
+                new_player = {"ine": player_ine, "lastname": lastname, "name": name, "birthdate": birthdate}
+                self.playermanager.addplayer(new_player)
+                print(f'Joueur créé')

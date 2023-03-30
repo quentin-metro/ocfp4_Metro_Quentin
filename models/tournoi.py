@@ -30,6 +30,7 @@ class Tournoi:
 
     def editenddate(self, time):
         self.end_date = time
+
     def getlistturns(self):
         return self.list_turns
 

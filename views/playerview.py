@@ -9,11 +9,11 @@ class PlayerView:
 
     def askcommandplayer(self):
         while True:
-            print(f'\n'
-                  f'Quel action souhaitez vous effectuer?\n'
-                  f'Voir la liste des joueurs | Liste\n'
-                  f'Ajouter un joueur | Ajouter\n'
-                  f'Retour Menu | Menu')
+            print('\n'
+                  'Quel action souhaitez vous effectuer?\n'
+                  'Voir la liste des joueurs | Liste\n'
+                  'Ajouter un joueur | Ajouter\n'
+                  'Retour Menu | Menu')
             choice = input().casefold()
             if choice == "liste":
                 self.viewplayerlist()
@@ -22,13 +22,13 @@ class PlayerView:
             elif choice == "menu":
                 break
             else:
-                print(f'Commande non comprise\n\n')
+                print('Commande non comprise\n\n')
 
     def viewplayerlist(self):
         playerlist = self.playermanager.getplayerlistindict()
         if playerlist:
-            print(f'\n'
-                  f'   INE  | Date de Naissance | Nom Prenom')
+            print('\n'
+                  '   INE  | Date de Naissance | Nom Prenom')
             for player in playerlist:
                 ine = player['ine']
                 lastname = player['lastname']
@@ -36,7 +36,7 @@ class PlayerView:
                 birthdate = player['birthdate']
                 print(f'{ine} |     {birthdate}      | {lastname} {name}')
         else:
-            print(f'\n Aucun joueur connu\n')
+            print('\n Aucun joueur connu\n')
 
     def addplayer(self):
         player_ine = input('INE: ')
@@ -67,4 +67,4 @@ class PlayerView:
             else:
                 new_player = {"ine": player_ine, "lastname": lastname, "name": name, "birthdate": birthdate}
                 self.playermanager.addplayer(new_player)
-                print(f'Joueur créé')
+                print('Joueur créé')

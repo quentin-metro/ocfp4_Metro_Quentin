@@ -1,11 +1,11 @@
 import random
-from controllers.myappexception import *
 from models.tournoi import Tournoi
 from controllers.playermanager import PlayerManager
 from controllers.matchmanager import MatchManager
 from controllers.turnmanager import TurnManager
 from controllers.manager import Manager
 from controllers.datehandler import DateHandler
+from controllers.myappexception import MyAppBadPlayerCount, MyAppPlayerNotFound, MyAppAlreadyInException
 
 
 class TournamentManager(Manager):
@@ -150,8 +150,10 @@ class TournamentManager(Manager):
                         for turn in list_turns:
                             list_turns_id.append(turn)
                         # Update data
-                        self.db.update({'list_turns': list_turns_id}, (self.query.id_tournament == int(id_tournament)))
-                        self.db.update({'current_turn': current_turn}, (self.query.id_tournament == int(id_tournament)))
+                        self.db.update({'list_turns': list_turns_id},
+                                       (self.query.id_tournament == int(id_tournament)))
+                        self.db.update({'current_turn': current_turn},
+                                       (self.query.id_tournament == int(id_tournament)))
                         return True
                 else:
                     # Check if all match are done
@@ -171,8 +173,10 @@ class TournamentManager(Manager):
                         list_turns_id = []
                         for turn in list_turns:
                             list_turns_id.append(turn)
-                        self.db.update({'list_turns': list_turns_id}, (self.query.id_tournament == int(id_tournament)))
-                        self.db.update({'current_turn': current_turn}, (self.query.id_tournament == int(id_tournament)))
+                        self.db.update({'list_turns': list_turns_id},
+                                       (self.query.id_tournament == int(id_tournament)))
+                        self.db.update({'current_turn': current_turn},
+                                       (self.query.id_tournament == int(id_tournament)))
                         info_tournoi = self.db.search(self.query.id_tournament == int(id_tournament))[0]
                         player_score = info_tournoi['list_player_score']
                         self.db.update({'list_player_score': player_score},
